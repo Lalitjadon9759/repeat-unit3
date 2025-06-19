@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+    .container {
+      padding: 10px;
+      margin-top: 20px;
+    }
+    </style>
+</head>
+<body>
+    <h1 id="heading">Original Heading</h1>
+  <p>This is the first paragraph.</p>
+  <p>This is the second paragraph.</p>
+  <p>This is the third paragraph.</p>
+
+  <div class="container">
+    <p>This content is inside the container div.</p>
+  </div>
+</body>
+</html>
+<script>
+ document.getElementById("heading").textContent="welcome to DOM world"
+ let p=document.getElementsByTagName("p");
+ for(let i=0;i<p.length;i++){
+  p[i].style.color="red"
+ }
+ const containerDiv = document.querySelector('.container');
+    containerDiv.style.backgroundColor = 'yellow';
+</script>
