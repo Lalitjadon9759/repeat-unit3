@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+    #paragraph-container {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+     <button id="addBtn">Add Paragraph</button>
+  <button id="removeBtn">Remove Last Paragraph</button>
+
+  <div id="container">
+  </div>
+</body>
+</html>
+<script>
+    let addbtn=document.getElementById('addBtn');
+    let removebtn=document.getElementById("removeBtn");
+    let container=document.getElementById("container");
+
+    addbtn.addEventListener("click",()=>{
+        let p=document.createElement('p');
+        p.textContent="add a new paragraph";
+        container.appendChild(p)
+    })
+    removebtn.addEventListener("click",()=>{
+        let lastelement=container.lastElementChild;
+        if(lastelement){
+            container.removeChild(lastelement);
+        }
+    })
+</script>
