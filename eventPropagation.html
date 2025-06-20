@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+   
+</head>
+<body>
+    <div class="outer">
+    Outer Div
+    <button>Outer Button</button>
+
+    <div class="middle">
+      Middle Div
+     <button>Middle Button</button>
+
+     <div class="inner">
+        Inner Div
+        <button>Inner Button</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+<script>
+    function logEvent(name, phase) {
+      alert(`${name} clicked during ${phase} phase`);
+    }
+</script>
