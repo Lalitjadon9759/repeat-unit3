@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+     <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+    input {
+      padding: 5px;
+      font-size: 16px;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 16px;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+    li {
+      margin-top: 10px;
+      list-style: none;
+    }
+    .completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+    
+  <h2>To-Do List</h2>
+  <input type="text" id="taskInput" placeholder="Enter a new task">
+  <button id="addTaskBtn">Add Task</button>
+
+  <ul id="taskList"></ul>
+
+</body>
+</html>
+<script>
+    let input=document.getElementById("taskInput")
+    let button=document.getElementById("addTaskBtn");
+    let list=document.getElementById('taskList');
+
+    button.addEventListener("click",()=>{
+    let  textInput=input.value.trim();
+    if(textInput==""){
+        alert("enter the input")
+        return;
+    }
+
+    let li=document.createElement("li");
+     
+    let span=document.createElement("span");
+    span.textContent=textInput;
+
+    let completedBtn=document.createElement("button");
+    completedBtn.textContent="complete";
+    completedBtn.style.marginLeft="20px"
+
+    let deletebtn=document.createElement("button");
+    deletebtn.textContent="delete";
+    deletebtn.style.marginLeft="5px";
+
+    let editbtn=document.createElement("button");
+    editbtn.textContent="edittask";
+    editbtn.style.marginLeft="5px"
+
+    editbtn.addEventListener("click",()=>{
+        let edittask=prompt("edit task");
+        span.textContent=edittask;
+    })
+
+    completedBtn.addEventListener("click",()=>{
+        span.classList.toggle('completed')
+    })
+
+    deletebtn.addEventListener("click",()=>{
+        list.removeChild(li);
+    })
+
+    li.appendChild(span);
+    li.appendChild(completedBtn);
+    li.appendChild(deletebtn);
+    li.appendChild(editbtn);
+    list.appendChild(li);
+
+    input.value=""
+    })
+</script>
