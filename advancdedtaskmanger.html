@@ -21,40 +21,42 @@
 
   <h2>Task Manager</h2>
 
-  <!-- Task Input -->
+
   <input type="text" id="taskInput" placeholder="Enter task">
   <button id="addTaskBtn">Add Task</button>
   <button id="sortBtn">Sort A-Z</button>
 
-  <!-- Filter Buttons -->
+
   <div>
     <button data-filter="all">All Tasks</button>
     <button data-filter="completed">Completed</button>
     <button data-filter="incomplete">Incomplete</button>
   </div>
 
-  <!-- Task Counters -->
   <p>Total: <span id="totalCount">0</span> |
      Completed: <span id="completedCount">0</span> |
      Incomplete: <span id="incompleteCount">0</span></p>
 
-  <!-- Task List -->
+
   <ul id="taskList"></ul>
 
   <script>
     const taskInput = document.getElementById('taskInput');
     const addTaskBtn = document.getElementById('addTaskBtn');
     const sortBtn = document.getElementById('sortBtn');
+
     const taskList = document.getElementById('taskList');
-    const filterButtons = document.querySelectorAll('[data-filter]');
-    const totalCount = document.getElementById('totalCount');
+     const filterButtons = document.querySelectorAll('[data-filter]');
+     
+     const totalCount = document.getElementById('totalCount');
+
     const completedCount = document.getElementById('completedCount');
     const incompleteCount = document.getElementById('incompleteCount');
 
     let tasks = [];
     let currentFilter = 'all';
 
-    // Add Task
+    
     addTaskBtn.addEventListener('click', () => {
       const text = taskInput.value.trim();
       if (text !== '') {
@@ -64,7 +66,6 @@
       }
     });
 
-    // Event Delegation for Toggle/Delete
     taskList.addEventListener('click', (e) => {
       const index = e.target.closest('li')?.dataset?.index;
       if (e.target.classList.contains('delete')) {
@@ -75,7 +76,7 @@
       renderTasks();
     });
 
-    // Filter Buttons
+    
     filterButtons.forEach(btn =>
       btn.addEventListener('click', () => {
         currentFilter = btn.dataset.filter;
@@ -83,13 +84,13 @@
       })
     );
 
-    // Sort Button
+    
     sortBtn.addEventListener('click', () => {
       tasks.sort((a, b) => a.text.localeCompare(b.text));
       renderTasks();
     });
 
-    // Render Tasks
+
     function renderTasks() {
       let filtered = tasks;
       if (currentFilter === 'completed') {
@@ -109,14 +110,14 @@
       updateCounters();
     }
 
-    // Update Task Counters
+
     function updateCounters() {
       totalCount.textContent = tasks.length;
       completedCount.textContent = tasks.filter(t => t.completed).length;
       incompleteCount.textContent = tasks.filter(t => !t.completed).length;
     }
 
-    // Initial Render
+    
     renderTasks();
   </script>
 </body>
