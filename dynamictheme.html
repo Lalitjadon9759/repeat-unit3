@@ -38,7 +38,7 @@
   <h1>Dynamic Theme Selector</h1>
   <label for="themeSelector">Choose Theme:</label>
   <select id="themeSelector">
-    <option value="light">Light</option>
+      <option value="light">Light</option>
     <option value="dark">Dark</option>
     <option value="blue">Blue</option>
   </select>
@@ -48,8 +48,6 @@
   <script>
     const themeSelector = document.getElementById('themeSelector');
     const body = document.body;
-
-    // Function to apply theme based on selection
     function applyTheme(theme) {
       body.classList.remove('theme-light', 'theme-dark', 'theme-blue');
 
@@ -57,18 +55,14 @@
         body.classList.add('theme-dark');
       } else if (theme === 'blue') {
         body.classList.add('theme-blue');
-      } else {
-        body.classList.add('theme-light');
+       } else {
+     body.classList.add('theme-light');
       }
     }
-
-    // Load theme from sessionStorage if available
     const savedTheme = sessionStorage.getItem('selectedTheme') || 'light';
-    applyTheme(savedTheme);
-    themeSelector.value = savedTheme;
-
-    // Event Listener for theme change
-    themeSelector.addEventListener('change', () => {
+     applyTheme(savedTheme);
+     themeSelector.value = savedTheme;
+       themeSelector.addEventListener('change', () => {
       const selectedTheme = themeSelector.value;
       applyTheme(selectedTheme);
       sessionStorage.setItem('selectedTheme', selectedTheme);
