@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Notes/Task App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+    }
+    h2 {
+      text-align: center;
+    }
+    #itemsList {
+      margin-top: 20px;
+    }
+    .item {
+      padding: 5px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    #emptyMsg {
+      color: gray;
+      text-align: center;
+      margin-top: 20px;
+    }
+    #clearBtn {
+      margin-top: 15px;
+      background-color: crimson;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #clearBtn:hover {
+      background-color: darkred;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>My Notes / Tasks</h2>
+
+  <input type="text" id="itemInput" placeholder="Enter item..." />
+  <button id="addBtn">Add Item</button>
+
+  <div id="itemsList"></div>
+  <p id="emptyMsg" style="display:none;">No items added yet.</p>
+
+  <button id="clearBtn">Clear All</button>
+
+  <script>
+    const itemInput = document.getElementById('itemInput');
+    const addBtn = document.getElementById('addBtn');
+    const itemsList = document.getElementById('itemsList');
+    const emptyMsg = document.getElementById('emptyMsg');
+    const clearBtn = document.getElementById('clearBtn');
+
+    let items = [];
+    function loadItems() {
+      const saved = localStorage.getItem('itemsList');
+      if (saved) {
+        items = JSON.parse(saved);
+      }
+      renderList();
+    }
+
+    function saveItems() {
+      localStorage.setItem('itemsList', JSON.stringify(items));
+    }
+
+    function renderList() {
+      itemsList.innerHTML = '';
+      if (items.length === 0) {
+        emptyMsg.style.display = 'block';
+      } else {
+        emptyMsg.style.display = 'none';
+        items.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'item';
+          div.textContent = item;
+          itemsList.appendChild(div);
+        });
+      }
+    }
+    addBtn.addEventListener('click', () => {
+      const newItem = itemInput.value.trim();
+      if (newItem !== '') {
+        items.push(newItem);
+        itemInput.value = '';
+        saveItems();
+        renderList();
+      }
+    });
+    itemInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        addBtn.click();
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all items?')) {
+        items = [];
+        saveItems();
+        renderList();
+      }
+    });
+
+    loadItems();
+  </script>
+
+</body>
+</html>
