@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create a New Post</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 30px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #response {
+      background: #f0f8ff;
+      padding: 15px;
+      border: 1px solid #4caf50;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    .error {
+      color: red;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Create a New Post</h2>
+
+  <form id="postForm">
+    <label for="title">Title:</label>
+    <input type="text" id="title" placeholder="Enter title" required>
+
+    <label for="body">Body:</label>
+    <textarea id="body" rows="4" placeholder="Enter body" required></textarea>
+
+    <div class="error" id="errorMsg"></div>
+
+    <button type="submit">Submit Post</button>
+  </form>
+
+  <div id="response"></div>
+
+  <script>
+    const form = document.getElementById('postForm');
+    const titleInput = document.getElementById('title');
+    const bodyInput = document.getElementById('body');
+    const responseDiv = document.getElementById('response');
+    const errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = '';
+      responseDiv.innerHTML = '';
+
+      const title = titleInput.value.trim();
+      const body = bodyInput.value.trim();
+
+      if (!title || !body) {
+        errorMsg.textContent = 'Both fields are required.';
+        return;
+      }
+
+      try {
+        const res = await fetch('https://jsonplaceholder.typicode.com/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, body })
+        });
+
+        if (!res.ok) throw new Error('Network response was not ok');
+
+        const data = await res.json();
+
+        responseDiv.innerHTML = `
+          <h3>Post Created Successfully:</h3>
+          <p><strong>ID:</strong> ${data.id}</p>
+          <p><strong>Title:</strong> ${data.title}</p>
+          <p><strong>Body:</strong> ${data.body}</p>
+        `;
+
+        form.reset();
+
+      } catch (error) {
+        errorMsg.textContent = 'Failed to create post. Please try again.';
+        console.error(error);
+      }
+    });
+  </script>
+
+</body>
+</html>
