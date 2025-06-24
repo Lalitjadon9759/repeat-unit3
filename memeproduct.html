@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meme Catalog</title>
+<style>
+body { font-family: Arial, sans-serif; background: #111; color: #fff; margin: 20px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+input, select, button { padding: 5px; border-radius: 4px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+.card { background: #222; padding: 10px; border-radius: 6px; position: relative; text-align: center; }
+.card img { max-width: 100%; border-radius: 4px; }
+.favorite { border: 2px solid gold; }
+.badge { position: absolute; top: 8px; right: 8px; background: gold; color: #000; padding: 2px 5px; font-size: 12px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>Meme Product Catalog</h1>
+<div class="controls">
+<button id="loadBtn">Load Memes</button>
+<input type="text" id="searchInput" placeholder="Search memes...">
+<select id="sortSelect">
+  <option value="name">Sort by Name</option>
+  <option value="width">Sort by Width</option>
+  <option value="height">Sort by Height</option>
+</select>
+<label><input type="checkbox" id="favoritesToggle"> Show Favorites Only</label>
+</div>
+
+<div class="grid" id="memeGrid"></div>
+
+<script>
+const grid = document.getElementById('memeGrid'),
+searchInput = document.getElementById('searchInput'),
+sortSelect = document.getElementById('sortSelect'),
+toggleFavs = document.getElementById('favoritesToggle'),
+loadBtn = document.getElementById('loadBtn');
+
+let memes = [], favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+searchInput.value = localStorage.getItem('search') || '';
+sortSelect.value = localStorage.getItem('sort') || 'name';
+toggleFavs.checked = JSON.parse(localStorage.getItem('showFavs')) || false;
+
+function render() {
+  let filtered = memes.filter(m => m.name.toLowerCase().includes(searchInput.value.toLowerCase()));
+  if (toggleFavs.checked) filtered = filtered.filter(m => favorites.includes(m.id));
+  filtered.sort((a, b) => {
+    if (sortSelect.value === 'name') return a.name.localeCompare(b.name);
+    if (sortSelect.value === 'width') return b.width - a.width;
+    return b.height - a.height;
+  });
+  grid.innerHTML = filtered.map(m => `
+    <div class="card ${favorites.includes(m.id) ? 'favorite' : ''}">
+      <img src="${m.url}" alt="${m.name}">
+      <h4>${m.name}</h4>
+      <button onclick="toggleFavorite('${m.id}')">${favorites.includes(m.id) ? 'Remove from' : 'Add to'} Favorites</button>
+      ${favorites.includes(m.id) ? '<div class="badge">★ Favorite</div>' : ''}
+    </div>
+  `).join('');
+}
+
+function toggleFavorite(id) {
+  favorites = favorites.includes(id) ? favorites.filter(f => f !== id) : [...favorites, id];
+  localStorage.setItem('favorites', JSON.stringify(favorites));
+  render();
+}
+
+loadBtn.onclick = () => {
+  fetch('https://api.imgflip.com/get_memes')
+    .then(res => res.json())
+    .then(data => { memes = data.data.memes; render(); });
+};
+
+searchInput.oninput = () => {
+  localStorage.setItem('search', searchInput.value);
+  render();
+};
+
+sortSelect.onchange = () => {
+  localStorage.setItem('sort', sortSelect.value);
+  render();
+};
+
+toggleFavs.onchange = () => {
+  localStorage.setItem('showFavs', toggleFavs.checked);
+  render();
+};
+
+if (memes.length) render();
+</script>
+
+</body>
+</html>
