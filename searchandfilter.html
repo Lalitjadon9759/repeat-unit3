@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Search & Filter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .controls input, .controls select {
+      padding: 8px;
+      font-size: 16px;
+    }
+    .count {
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+    }
+    .product {
+      background: #fff;
+      border-radius: 5px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .product img {
+      max-width: 100%;
+      height: 150px;
+      object-fit: contain;
+    }
+    .product h3 {
+      font-size: 16px;
+      margin: 10px 0 5px;
+    }
+    .product p {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Product Search & Filter</h1>
+
+<div class="controls">
+  <input type="text" id="searchInput" placeholder="Search by title...">
+  <select id="categoryFilter">
+    <option value="all">All Categories</option>
+  </select>
+  <select id="sortPrice">
+    <option value="default">Sort by Price</option>
+    <option value="asc">Price: Low to High</option>
+    <option value="desc">Price: High to Low</option>
+  </select>
+</div>
+
+<div class="count" id="productCount">Products Found: 0</div>
+
+<div class="products" id="productList"></div>
+
+<script>
+  const productList = document.getElementById('productList');
+  const searchInput = document.getElementById('searchInput');
+  const categoryFilter = document.getElementById('categoryFilter');
+  const sortPrice = document.getElementById('sortPrice');
+  const productCount = document.getElementById('productCount');
+
+  let products = []; // All products fetched
+  let filteredProducts = []; // Products after search/filter/sort
+
+  // Fetch products and categories on page load
+  async function init() {
+    try {
+      const [productsRes, categoriesRes] = await Promise.all([
+        fetch('https://fakestoreapi.com/products'),
+        fetch('https://fakestoreapi.com/products/categories')
+      ]);
+
+      products = await productsRes.json();
+      const categories = await categoriesRes.json();
+
+      // Populate category dropdown
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+        categoryFilter.appendChild(option);
+      });
+
+      applyFilters();
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }
+
+  // Filter, search, and sort products
+  function applyFilters() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedCategory = categoryFilter.value;
+    const sortOption = sortPrice.value;
+
+    filteredProducts = products.filter(p => 
+      p.title.toLowerCase().includes(searchTerm) &&
+      (selectedCategory === 'all' || p.category === selectedCategory)
+    );
+
+    if (sortOption === 'asc') {
+      filteredProducts.sort((a, b) => a.price - b.price);
+    } else if (sortOption === 'desc') {
+      filteredProducts.sort((a, b) => b.price - a.price);
+    }
+
+    renderProducts();
+  }
+
+  // Render product cards
+  function renderProducts() {
+    productList.innerHTML = '';
+    productCount.textContent = `Products Found: ${filteredProducts.length}`;
+
+    if (filteredProducts.length === 0) {
+      productList.innerHTML = `<p style="grid-column: 1/-1; text-align:center;">No products found.</p>`;
+      return;
+    }
+
+    filteredProducts.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'product';
+      card.innerHTML = `
+        <img src="${p.image}" alt="${p.title}">
+        <h3>${p.title}</h3>
+        <p>$${p.price.toFixed(2)}</p>
+      `;
+      productList.appendChild(card);
+    });
+  }
+
+  // Event Listeners
+  searchInput.addEventListener('input', applyFilters);
+  categoryFilter.addEventListener('change', applyFilters);
+  sortPrice.addEventListener('change', applyFilters);
+
+  // Init
+  init();
+</script>
+
+</body>
+</html>
