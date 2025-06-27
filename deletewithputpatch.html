@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Task Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+    }
+    .task {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin: 10px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .buttons button {
+      margin-left: 5px;
+    }
+    .edit-form {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Task Manager</h1>
+<div id="taskList"></div>
+
+<script>
+const API_URL = 'https://mockapi.io/tasks';  // Replace with actual API if needed
+
+// Fetch and display tasks
+async function fetchTasks() {
+  try {
+    const res = await fetch(API_URL);
+    const tasks = await res.json();
+    const taskList = document.getElementById('taskList');
+    taskList.innerHTML = '';
+
+    tasks.forEach(task => {
+      const taskDiv = document.createElement('div');
+      taskDiv.className = 'task';
+
+      taskDiv.innerHTML = `
+        <div>
+          <strong>${task.title}</strong> - <em>${task.status}</em>
+        </div>
+        <div class="buttons">
+          <button onclick="showEditForm('${task.id}', '${task.title}', '${task.status}')">Edit</button>
+          <button onclick="deleteTask('${task.id}')">Delete</button>
+        </div>
+      `;
+
+      taskList.appendChild(taskDiv);
+    });
+  } catch (error) {
+    alert('Failed to fetch tasks.');
+    console.error(error);
+  }
+}
+
+// Show inline edit form
+function showEditForm(id, title, status) {
+  const taskList = document.getElementById('taskList');
+  taskList.innerHTML = `
+    <div class="edit-form">
+      <h3>Edit Task</h3>
+      <input type="text" id="editTitle" value="${title}" placeholder="Task Title">
+      <select id="editStatus">
+        <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>Pending</option>
+        <option value="Completed" ${status === 'Completed' ? 'selected' : ''}>Completed</option>
+      </select>
+      <button onclick="updateTask('${id}')">Update</button>
+      <button onclick="fetchTasks()">Cancel</button>
+    </div>
+  `;
+}
+
+// Update task with PATCH/PUT
+async function updateTask(id) {
+  const title = document.getElementById('editTitle').value.trim();
+  const status = document.getElementById('editStatus').value;
+
+  if (!title) {
+    alert('Title cannot be empty.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: 'PATCH', // Or 'PUT' if full object replacement is needed
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, status })
+    });
+
+    if (res.ok) {
+      alert('Task updated successfully.');
+      fetchTasks();
+    } else {
+      alert('Failed to update task.');
+    }
+  } catch (error) {
+    alert('Error updating task.');
+    console.error(error);
+  }
+}
+
+// Delete task
+async function deleteTask(id) {
+  if (!confirm('Are you sure you want to delete this task?')) return;
+
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (res.ok) {
+      alert('Task deleted.');
+      fetchTasks();
+    } else {
+      alert('Failed to delete task.');
+    }
+  } catch (error) {
+    alert('Error deleting task.');
+    console.error(error);
+  }
+}
+
+// Initial fetch
+fetchTasks();
+</script>
+
+</body>
+</html>
