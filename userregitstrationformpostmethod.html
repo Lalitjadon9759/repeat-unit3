@@ -79,18 +79,18 @@
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        // Get form values
+        
         const name = document.getElementById('name').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value.trim();
 
-        // Validate fields
+        
         if (!name || !email || !password) {
             showMessage('All fields are required.', 'error');
             return;
         }
 
-        // Prepare data
+    
         const userData = {
             name: name,
             email: email,

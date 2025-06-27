@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+            background-color: #f0f2f5;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            margin-bottom: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        input {
+            padding: 8px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            width: calc(50% - 15px);
+        }
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            box-shadow: 0 0 3px rgba(0,0,0,0.1);
+        }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>User Dashboard</h1>
+
+<form id="userForm">
+    <input type="text" id="name" placeholder="Name" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <br>
+    <button type="submit">Add User</button>
+    <div class="error" id="errorMsg"></div>
+</form>
+
+<h3>Registered Users:</h3>
+<ul id="userList"></ul>
+
+<script>
+    const apiURL = "https://mockapi.io/users";  // Replace with actual working MockAPI endpoint
+    const userList = document.getElementById("userList");
+    const userForm = document.getElementById("userForm");
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const errorMsg = document.getElementById("errorMsg");
+
+    // Fetch and display all users
+    async function fetchUsers() {
+        userList.innerHTML = "<li>Loading users...</li>";
+        try {
+            const res = await fetch(apiURL);
+            const users = await res.json();
+            userList.innerHTML = "";
+            users.forEach(user => {
+                const li = document.createElement("li");
+                li.textContent = `${user.name} (${user.email})`;
+                userList.appendChild(li);
+            });
+        } catch (err) {
+            userList.innerHTML = "<li>Error fetching users.</li>";
+            console.error(err);
+        }
+    }
+
+    // Add a new user
+    userForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorMsg.textContent = "";
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim().toLowerCase();
+
+        if (!name || !email) {
+            errorMsg.textContent = "Please enter both name and email.";
+            return;
+        }
+
+        // Prevent duplicate emails
+        const existingEmails = Array.from(userList.children).map(li => {
+            const text = li.textContent;
+            const match = text.match(/\(([^)]+)\)/);
+            return match ? match[1].toLowerCase() : "";
+        });
+
+        if (existingEmails.includes(email)) {
+            errorMsg.textContent = "User with this email already exists.";
+            return;
+        }
+
+        try {
+            await fetch(apiURL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email })
+            });
+
+            nameInput.value = "";
+            emailInput.value = "";
+            fetchUsers();
+        } catch (err) {
+            console.error(err);
+            errorMsg.textContent = "Error adding user.";
+        }
+    });
+
+    // Initial fetch
+    fetchUsers();
+</script>
+
+</body>
+</html>
