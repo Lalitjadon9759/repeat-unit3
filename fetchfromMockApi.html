@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Search Page</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f4f4f4;
+    }
+    .filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    input, select, button {
+        padding: 8px;
+        font-size: 14px;
+    }
+    .products {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 15px;
+    }
+    .product-card {
+        background: #fff;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        text-align: center;
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .product-card img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        margin-bottom: 10px;
+    }
+    .status {
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+
+<h2>Product Search Page</h2>
+
+<div class="filters">
+    <select id="category">
+        <option value="">Select Category</option>
+        <option value="electronics">Electronics</option>
+        <option value="clothing">Clothing</option>
+        <option value="books">Books</option>
+    </select>
+
+    <input type="number" id="minPrice" placeholder="Min Price">
+    <input type="number" id="maxPrice" placeholder="Max Price">
+    <button id="searchBtn">Search</button>
+</div>
+
+<div class="status" id="status"></div>
+
+<div class="products" id="productList"></div>
+
+<script>
+const searchBtn = document.getElementById('searchBtn');
+const productList = document.getElementById('productList');
+const statusDiv = document.getElementById('status');
+
+searchBtn.addEventListener('click', () => {
+    const category = document.getElementById('category').value;
+    const minPrice = document.getElementById('minPrice').value;
+    const maxPrice = document.getElementById('maxPrice').value;
+
+    let url = `https://mockapi.io/products?`;
+
+    // Construct URL with query params
+    const params = [];
+    if (category) params.push(`category=${encodeURIComponent(category)}`);
+    if (minPrice) params.push(`min_price=${encodeURIComponent(minPrice)}`);
+    if (maxPrice) params.push(`max_price=${encodeURIComponent(maxPrice)}`);
+    params.push(`sort=asc`);
+
+    url += params.join('&');
+
+    fetchProducts(url);
+});
+
+function fetchProducts(url) {
+    productList.innerHTML = '';
+    statusDiv.textContent = 'Loading...';
+
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch products');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.length === 0) {
+                statusDiv.textContent = 'No products found';
+            } else {
+                statusDiv.textContent = `Found ${data.length} products`;
+            }
+
+            productList.innerHTML = data.map(product => `
+                <div class="product-card">
+                    <img src="${product.image || 'https://via.placeholder.com/150'}" alt="${product.name}">
+                    <h4>${product.name}</h4>
+                    <p>₹ ${product.price}</p>
+                </div>
+            `).join('');
+        })
+        .catch(err => {
+            statusDiv.textContent = `Error: ${err.message}`;
+        });
+}
+</script>
+
+</body>
+</html>

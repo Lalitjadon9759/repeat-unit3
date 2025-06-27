@@ -82,10 +82,10 @@
   const sortPrice = document.getElementById('sortPrice');
   const productCount = document.getElementById('productCount');
 
-  let products = []; // All products fetched
-  let filteredProducts = []; // Products after search/filter/sort
+  let products = [];
+  let filteredProducts = []; 
 
-  // Fetch products and categories on page load
+  
   async function init() {
     try {
       const [productsRes, categoriesRes] = await Promise.all([
@@ -96,7 +96,7 @@
       products = await productsRes.json();
       const categories = await categoriesRes.json();
 
-      // Populate category dropdown
+
       categories.forEach(cat => {
         const option = document.createElement('option');
         option.value = cat;
@@ -110,7 +110,6 @@
     }
   }
 
-  // Filter, search, and sort products
   function applyFilters() {
     const searchTerm = searchInput.value.toLowerCase();
     const selectedCategory = categoryFilter.value;
@@ -130,7 +129,7 @@
     renderProducts();
   }
 
-  // Render product cards
+
   function renderProducts() {
     productList.innerHTML = '';
     productCount.textContent = `Products Found: ${filteredProducts.length}`;
@@ -152,12 +151,11 @@
     });
   }
 
-  // Event Listeners
+  
   searchInput.addEventListener('input', applyFilters);
   categoryFilter.addEventListener('change', applyFilters);
   sortPrice.addEventListener('change', applyFilters);
 
-  // Init
   init();
 </script>
 
