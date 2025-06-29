@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Feedback - Firebase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form, table {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .edit-form {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #aaa;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Submit Feedback</h2>
+<form id="feedbackForm">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="text" id="message" placeholder="Message" required>
+    <button type="submit">Submit</button>
+</form>
+
+<h2>Feedback List</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Message</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="feedbackTableBody"></tbody>
+</table>
+
+<div class="edit-form" id="editForm">
+    <h3>Edit Feedback</h3>
+    <input type="text" id="editUsername" placeholder="Username" required>
+    <input type="text" id="editMessage" placeholder="Message" required>
+    <button id="saveEditBtn">Save Changes</button>
+    <button id="cancelEditBtn">Cancel</button>
+</div>
+
+<script>
+    const firebaseURL = 'https://firebaseio.com/feedback.json'; 
+    const feedbackTable = document.getElementById('feedbackTableBody');
+    const feedbackForm = document.getElementById('feedbackForm');
+    const editForm = document.getElementById('editForm');
+    
+    let currentEditId = null;
+
+    
+    function loadFeedback() {
+        fetch(firebaseURL)
+            .then(res => res.json())
+            .then(data => {
+                feedbackTable.innerHTML = '';
+                for (const id in data) {
+                    const { username, message } = data[id];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${username}</td>
+                        <td>${message}</td>
+                        <td>
+                            <button onclick="editFeedback('${id}', '${username}', '${message}')">Edit</button>
+                        </td>
+                    `;
+                    feedbackTable.appendChild(row);
+                }
+            })
+            .catch(err => alert('Error loading feedback: ' + err));
+    }
+
+    
+    feedbackForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const message = document.getElementById('message').value.trim();
+        
+        if (username && message) {
+            fetch(firebaseURL, {
+                method: 'POST',
+                body: JSON.stringify({ username, message }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(() => {
+                feedbackForm.reset();
+                loadFeedback();
+            })
+            .catch(err => alert('Error submitting feedback: ' + err));
+        }
+    });
+
+
+    window.editFeedback = function(id, username, message) {
+        currentEditId = id;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editMessage').value = message;
+        editForm.style.display = 'block';
+    };
+
+    // Save edited feedback
+    document.getElementById('saveEditBtn').addEventListener('click', () => {
+        const username = document.getElementById('editUsername').value.trim();
+        const message = document.getElementById('editMessage').value.trim();
+        
+        if (currentEditId && username && message) {
+            fetch(`https://YOUR_PROJECT_ID.firebaseio.com/feedback/${currentEditId}.json`, {
+                method: 'PATCH',
+                body: JSON.stringify({ username, message }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(() => {
+                editForm.style.display = 'none';
+                currentEditId = null;
+                loadFeedback();
+            })
+            .catch(err => alert('Error updating feedback: ' + err));
+        }
+    });
+
+    // Cancel edit
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+        editForm.style.display = 'none';
+        currentEditId = null;
+    });
+
+    // Initial load
+    loadFeedback();
+</script>
+
+</body>
+</html>
