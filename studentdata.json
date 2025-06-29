@@ -1,0 +1,9 @@
+{
+  "users": {
+    "user1": { "name": "John Doe", "email": "john@example.com" },
+    "user2": { "name": "Jane Smith", "email": "jane@example.com" },
+    "user3": { "name": "Michael Brown", "email": "michael@example.com" },
+    "user4": { "name": "Emily Davis", "email": "emily@example.com" },
+    "user5": { "name": "David Wilson", "email": "david@example.com" }
+  }
+}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Firebase Realtime Database - User List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f7f7f7;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin-top: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #error {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Firebase User List</h1>
+
+<table id="userTable">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Data will be inserted here -->
+    </tbody>
+</table>
+
+<p id="error"></p>
+
+<script>
+    // Replace this with your actual Firebase Realtime Database URL (make sure to end with .json)
+    const DATABASE_URL = "https://sutdendtsmanager-default-rtdb.asia-southeast1.firebasedatabase.app/users.json";
+
+    // Fetch data from Firebase
+    fetch(DATABASE_URL)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP Error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const tableBody = document.querySelector('#userTable tbody');
+
+            if (!data) {
+                document.getElementById('error').innerText = "No user data found.";
+                return;
+            }
+
+            Object.values(data).forEach(user => {
+                const row = document.createElement('tr');
+                
+                const nameCell = document.createElement('td');
+                nameCell.textContent = user.name;
+
+                const emailCell = document.createElement('td');
+                emailCell.textContent = user.email;
+
+                row.appendChild(nameCell);
+                row.appendChild(emailCell);
+                tableBody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            document.getElementById('error').innerText = "Error fetching user data: " + error.message;
+        });
+</script>
+
+</body>
+</html>
