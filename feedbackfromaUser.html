@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Submit Feedback to Firebase</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 400px;
+      background: #fff;
+      padding: 20px;
+      margin: 50px auto;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Feedback Form</h2>
+    <input type="text" id="username" placeholder="Your Name" required>
+    <textarea id="message" rows="4" placeholder="Your Feedback" required></textarea>
+    <button id="submitBtn">Submit Feedback</button>
+
+    <div id="responseMsg" class="message"></div>
+  </div>
+
+  <script>
+    const submitBtn = document.getElementById('submitBtn');
+    const responseMsg = document.getElementById('responseMsg');
+
+    submitBtn.addEventListener('click', () => {
+      const username = document.getElementById('username').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      if (username === '' || message === '') {
+        showMessage('Please fill in both fields.', 'error');
+        return;
+      }
+
+      const feedback = { username, message };
+      
+      // Replace with your actual Firebase Realtime Database URL
+      const databaseURL = 'https://YOUR_DATABASE_URL_HERE/feedback.json';
+
+      fetch(databaseURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(feedback)
+      })
+      .then(response => {
+        if (response.ok) {
+          showMessage('Feedback submitted successfully!', 'success');
+          document.getElementById('username').value = '';
+          document.getElementById('message').value = '';
+        } else {
+          throw new Error('Failed to submit feedback.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error submitting feedback. Try again.', 'error');
+      });
+    });
+
+    function showMessage(msg, type) {
+      responseMsg.textContent = msg;
+      responseMsg.className = `message ${type}`;
+      responseMsg.style.display = 'block';
+    }
+ 
