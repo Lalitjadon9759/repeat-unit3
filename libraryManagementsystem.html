@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Library Management System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    .filters, .form-section {
+      margin-bottom: 20px;
+    }
+    input, select, button {
+      margin: 5px;
+      padding: 5px;
+    }
+    #booksList, #membersList {
+      margin-top: 10px;
+    }
+    .card {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Library Management System</h1>
+
+
+  <div class="filters">
+    <h2>Book Filters</h2>
+    <input type="text" id="filterGenre" placeholder="Genre">
+    <input type="text" id="filterAuthor" placeholder="Author">
+    <select id="filterAvailability">
+      <option value="">All</option>
+      <option value="true">Available</option>
+      <option value="false">Unavailable</option>
+    </select>
+    <select id="sortBooks">
+      <option value="">Sort By</option>
+      <option value="title">Title</option>
+      <option value="author">Author</option>
+      <option value="publishedYear">Published Year</option>
+    </select>
+    <button onclick="loadBooks()">Apply</button>
+  </div>
+
+
+  <div class="form-section">
+    <h2>Add/Update Book</h2>
+    <input type="hidden" id="bookId">
+    <input type="text" id="title" placeholder="Title">
+    <input type="text" id="author" placeholder="Author">
+    <input type="text" id="genre" placeholder="Genre">
+    <input type="number" id="publishedYear" placeholder="Published Year">
+    <select id="available">
+      <option value="true">Available</option>
+      <option value="false">Unavailable</option>
+    </select>
+    <button onclick="addOrUpdateBook()">Submit</button>
+  </div>
+
+  <h2>Books</h2>
+  <div id="booksList"></div>
+  <div id="bookPagination"></div>
+
+  <hr>
+  
+  <div class="filters">
+    <h2>Member Filters</h2>
+    <select id="filterActive">
+      <option value="">All</option>
+      <option value="true">Active</option>
+      <option value="false">Inactive</option>
+    </select>
+    <input type="date" id="filterMembershipDate">
+    <select id="sortMembers">
+      <option value="">Sort By</option>
+      <option value="name">Name</option>
+      <option value="membershipDate">Membership Date</option>
+    </select>
+    <button onclick="loadMembers()">Apply</button>
+  </div>
+
+  
+  <div class="form-section">
+    <h2>Add/Update Member</h2>
+    <input type="hidden" id="memberId">
+    <input type="text" id="memberName" placeholder="Name">
+    <input type="date" id="membershipDate">
+    <select id="active">
+      <option value="true">Active</option>
+      <option value="false">Inactive</option>
+    </select>
+    <button onclick="addOrUpdateMember()">Submit</button>
+  </div>
+
+
+  <h2>Members</h2>
+  <div id="membersList"></div>
+  <div id="memberPagination"></div>
+
+<script>
+const baseURL = 'https:https://categories.firebaseio.com/stores'; 
+const itemsPerPage = 5;
+
+let state = JSON.parse(localStorage.getItem('libraryState')) || {
+  bookFilters: {}, bookSort: '', bookPage: 1,
+  memberFilters: {}, memberSort: '', memberPage: 1,
+};
+
+function saveState() {
+  localStorage.setItem('libraryState', JSON.stringify(state));
+}
+
+// Books
+async function loadBooks() {
+  const genre = document.getElementById('filterGenre').value;
+  const author = document.getElementById('filterAuthor').value;
+  const available = document.getElementById('filterAvailability').value;
+  const sort = document.getElementById('sortBooks').value;
+
+  state.bookFilters = { genre, author, available };
+  state.bookSort = sort;
+  state.bookPage = state.bookPage || 1;
+  saveState();
+
+  const res = await fetch(`${baseURL}/books.json`);
+  let data = await res.json();
+  if (!data) return;
+
+  data = Object.values(data);
+  if (genre) data = data.filter(b => b.genre.toLowerCase().includes(genre.toLowerCase()));
+  if (author) data = data.filter(b => b.author.toLowerCase().includes(author.toLowerCase()));
+  if (available) data = data.filter(b => String(b.available) === available);
+  if (sort) data.sort((a, b) => (a[sort] > b[sort] ? 1 : -1));
+
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const start = (state.bookPage - 1) * itemsPerPage;
+  const paginated = data.slice(start, start + itemsPerPage);
+
+  document.getElementById('booksList').innerHTML = paginated.map(b => `
+    <div class="card">
+      <strong>${b.title}</strong> by ${b.author} (${b.publishedYear}) [${b.genre}] - ${b.available ? 'Available' : 'Unavailable'}
+      <button onclick="editBook(${b.id})">Edit</button>
+      <button onclick="deleteBook(${b.id})">Delete</button>
+    </div>
+  `).join('');
+
+  document.getElementById('bookPagination').innerHTML = `
+    <button ${state.bookPage <= 1 ? 'disabled' : ''} onclick="changeBookPage(${state.bookPage - 1})">Prev</button>
+    Page ${state.bookPage} of ${totalPages}
+    <button ${state.bookPage >= totalPages ? 'disabled' : ''} onclick="changeBookPage(${state.bookPage + 1})">Next</button>
+  `;
+}
+
+function changeBookPage(page) {
+  state.bookPage = page;
+  saveState();
+  loadBooks();
+}
+
+async function addOrUpdateBook() {
+  const id = document.getElementById('bookId').value || Date.now();
+  const book = {
+    id: Number(id),
+    title: document.getElementById('title').value,
+    author: document.getElementById('author').value,
+    genre: document.getElementById('genre').value,
+    publishedYear: Number(document.getElementById('publishedYear').value),
+    available: document.getElementById('available').value === 'true'
+  };
+
+  await fetch(`${baseURL}/books/${id}.json`, {
+    method: 'PUT',
+    body: JSON.stringify(book)
+  });
+
+  document.getElementById('bookId').value = '';
+  loadBooks();
+}
+
+async function editBook(id) {
+  const res = await fetch(`${baseURL}/books/${id}.json`);
+  const book = await res.json();
+  document.getElementById('bookId').value = book.id;
+  document.getElementById('title').value = book.title;
+  document.getElementById('author').value = book.author;
+  document.getElementById('genre').value = book.genre;
+  document.getElementById('publishedYear').value = book.publishedYear;
+  document.getElementById('available').value = book.available;
+}
+
+async function deleteBook(id) {
+  await fetch(`${baseURL}/books/${id}.json`, { method: 'DELETE' });
+  loadBooks();
+}
+
+
+async function loadMembers() {
+  const active = document.getElementById('filterActive').value;
+  const membershipDate = document.getElementById('filterMembershipDate').value;
+  const sort = document.getElementById('sortMembers').value;
+
+  state.memberFilters = { active, membershipDate };
+  state.memberSort = sort;
+  state.memberPage = state.memberPage || 1;
+  saveState();
+
+  const res = await fetch(`${baseURL}/members.json`);
+  let data = await res.json();
+  if (!data) return;
+
+  data = Object.values(data);
+  if (active) data = data.filter(m => String(m.active) === active);
+  if (membershipDate) data = data.filter(m => m.membershipDate >= membershipDate);
+  if (sort) data.sort((a, b) => (a[sort] > b[sort] ? 1 : -1));
+
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const start = (state.memberPage - 1) * itemsPerPage;
+  const paginated = data.slice(start, start + itemsPerPage);
+
+  document.getElementById('membersList').innerHTML = paginated.map(m => `
+    <div class="card">
+      <strong>${m.name}</strong> - Joined: ${m.membershipDate} - ${m.active ? 'Active' : 'Inactive'}
+      <button onclick="editMember(${m.id})">Edit</button>
+      <button onclick="deleteMember(${m.id})">Delete</button>
+    </div>
+  `).join('');
+
+  document.getElementById('memberPagination').innerHTML = `
+    <button ${state.memberPage <= 1 ? 'disabled' : ''} onclick="changeMemberPage(${state.memberPage - 1})">Prev</button>
+    Page ${state.memberPage} of ${totalPages}
+    <button ${state.memberPage >= totalPages ? 'disabled' : ''} onclick="changeMemberPage(${state.memberPage + 1})">Next</button>
+  `;
+}
+
+function changeMemberPage(page) {
+  state.memberPage = page;
+  saveState();
+  loadMembers();
+}
+
+async function addOrUpdateMember() {
+  const id = document.getElementById('memberId').value || Date.now();
+  const member = {
+    id: Number(id),
+    name: document.getElementById('memberName').value,
+    membershipDate: document.getElementById('membershipDate').value,
+    active: document.getElementById('active').value === 'true'
+  };
+
+  await fetch(`${baseURL}/members/${id}.json`, {
+    method: 'PUT',
+    body: JSON.stringify(member)
+  });
+
+  document.getElementById('memberId').value = '';
+  loadMembers();
+}
+
+async function editMember(id) {
+  const res = await fetch(`${baseURL}/members/${id}.json`);
+  const member = await res.json();
+  document.getElementById('memberId').value = member.id;
+  document.getElementById('memberName').value = member.name;
+  document.getElementById('membershipDate').value = member.membershipDate;
+  document.getElementById('active').value = member.active;
+}
+
+async function deleteMember(id) {
+  await fetch(`${baseURL}/members/${id}.json`, { method: 'DELETE' });
+  loadMembers();
+}
+
+// Restore state on load
+window.onload = () => {
+  document.getElementById('filterGenre').value = state.bookFilters.genre || '';
+  document.getElementById('filterAuthor').value = state.bookFilters.author || '';
+  document.getElementById('filterAvailability').value = state.bookFilters.available || '';
+  document.getElementById('sortBooks').value = state.bookSort || '';
+
+  document.getElementById('filterActive').value = state.memberFilters.active || '';
+  document.getElementById('filterMembershipDate').value = state.memberFilters.membershipDate || '';
+  document.getElementById('sortMembers').value = state.memberSort || '';
+
+  loadBooks();
+  loadMembers();
+};
+</script>
+</body>
+</html>
