@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Novel List - Firebase Firestore</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+    }
+    .controls {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    input, select {
+      padding: 8px;
+      font-size: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #333;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Novel List</h1>
+
+<div class="controls">
+  <input type="text" id="searchInput" placeholder="Search by Title or Author">
+  
+  <select id="yearFilter">
+    <option value="">Filter by Release Year</option>
+    <option value="2019">2019</option>
+    <option value="2020">2020</option>
+    <option value="2021">2021</option>
+    <option value="2022">2022</option>
+  </select>
+  
+  <select id="sortPrice">
+    <option value="">Sort by Price</option>
+    <option value="asc">Price: Low to High</option>
+    <option value="desc">Price: High to Low</option>
+  </select>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Author</th>
+      <th>Price ($)</th>
+      <th>Release Year</th>
+      <th>Genre</th>
+    </tr>
+  </thead>
+  <tbody id="novelTableBody">
+
+  </tbody>
+</table>
+
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+<script>
+  
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const tableBody = document.getElementById('novelTableBody');
+  const searchInput = document.getElementById('searchInput');
+  const yearFilter = document.getElementById('yearFilter');
+  const sortPrice = document.getElementById('sortPrice');
+
+  function fetchNovels() {
+    let query = db.collection('novels');
+    const selectedYear = yearFilter.value;
+    if (selectedYear) {
+      query = query.where('release_year', '==', parseInt(selectedYear));
+    }
+    const sortOrder = sortPrice.value;
+    if (sortOrder) {
+      query = query.orderBy('price', sortOrder);
+    }
+
+    query.get().then(snapshot => {
+      const novels = [];
+      snapshot.forEach(doc => {
+        novels.push({ id: doc.id, ...doc.data() });
+      });
+      renderNovels(novels);
+    }).catch(err => console.error(err));
+  }
+
+  function renderNovels(novels) {
+    const searchTerm = searchInput.value.toLowerCase();
+    const filteredNovels = novels.filter(novel =>
+      novel.title.toLowerCase().includes(searchTerm) ||
+      novel.author.toLowerCase().includes(searchTerm)
+    );
+
+    tableBody.innerHTML = '';
+    if (filteredNovels.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="5">No novels found.</td></tr>';
+      return;
+    }
+
+    filteredNovels.forEach(novel => {
+      const row = `
+        <tr>
+          <td>${novel.title}</td>
+          <td>${novel.author}</td>
+          <td>${novel.price.toFixed(2)}</td>
+          <td>${novel.release_year}</td>
+          <td>${novel.genre}</td>
+        </tr>
+      `;
+      tableBody.innerHTML += row;
+    });
+  }
+
+  
+  yearFilter.addEventListener('change', fetchNovels);
+  sortPrice.addEventListener('change', fetchNovels);
+  searchInput.addEventListener('input', fetchNovels);
+
+  
+  fetchNovels();
+
+</script>
+
+</body>
+</html>
