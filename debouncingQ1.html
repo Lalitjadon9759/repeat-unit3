@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Auth & FakeStore Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 20px; }
+        .section { display: none; }
+        img { width: 100px; }
+        button { margin-top: 10px; }
+        hr { margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h2>Firebase Auth & Dashboard</h2>
+
+<!-- Navigation -->
+<button onclick="showSection('registerSection')">Register</button>
+<button onclick="showSection('loginSection')">Login</button>
+<button onclick="showSection('dashboardSection')">Dashboard</button>
+<hr>
+
+<!-- Register Section -->
+<div id="registerSection" class="section">
+    <h3>Register</h3>
+    <input type="text" id="regName" placeholder="Name"><br><br>
+    <input type="email" id="regEmail" placeholder="Email"><br><br>
+    <input type="password" id="regPassword" placeholder="Password"><br><br>
+    <button onclick="register()">Register</button>
+</div>
+
+<!-- Login Section -->
+<div id="loginSection" class="section">
+    <h3>Login</h3>
+    <input type="email" id="loginEmail" placeholder="Email"><br><br>
+    <input type="password" id="loginPassword" placeholder="Password"><br><br>
+    <button onclick="login()">Login</button>
+</div>
+
+<!-- Dashboard Section -->
+<div id="dashboardSection" class="section">
+    <h3>Dashboard</h3>
+    <button onclick="logout()">Logout</button>
+    <div id="products"></div>
+</div>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+// Your Firebase Config (replace with your actual config)
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// Show specific section
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
+
+    if (sectionId === 'dashboardSection') {
+        const loggedIn = localStorage.getItem("loggedInUser");
+        if (!loggedIn) {
+            alert("Please log in first!");
+            showSection('loginSection');
+        } else {
+            loadProducts();
+        }
+    }
+}
+
+// Register function
+function register() {
+    const name = document.getElementById("regName").value.trim();
+    const email = document.getElementById("regEmail").value.trim();
+    const password = document.getElementById("regPassword").value.trim();
+
+    if (!name || !email || !password) {
+        alert("All fields are required!");
+        return;
+    }
+
+    const userId = Date.now();
+
+    database.ref("users/" + userId).set({
+        name: name,
+        email: email,
+        password: password
+    }).then(() => {
+        alert("Registration Successful! Please log in.");
+        showSection('loginSection');
+    }).catch(error => alert("Error: " + error.message));
+}
+
+// Login function
+function login() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
+
+    database.ref("users").once("value").then(snapshot => {
+        const users = snapshot.val();
+        let found = false;
+
+        for (let id in users) {
+            if (users[id].email === email && users[id].password === password) {
+                found = true;
+                localStorage.setItem("loggedInUser", id);
+                alert("Login Successful!");
+                showSection('dashboardSection');
+                break;
+            }
+        }
+
+        if (!found) alert("Wrong credentials! Try again.");
+    });
+}
+
+// Load products from FakeStore API
+function loadProducts() {
+    const productsDiv = document.getElementById("products");
+    productsDiv.innerHTML = "Loading products...";
+
+    fetch("https://fakestoreapi.com/products")
+        .then(res => res.json())
+        .then(data => {
+            productsDiv.innerHTML = "";
+            data.forEach(p => {
+                const div = document.createElement("div");
+                div.innerHTML = `
+                    <h4>${p.title}</h4>
+                    <p>Price: $${p.price}</p>
+                    <img src="${p.image}"><hr>
+                `;
+                productsDiv.appendChild(div);
+            });
+        })
+        .catch(() => productsDiv.innerHTML = "Failed to load products.");
+}
+
+// Logout
+function logout() {
+    localStorage.removeItem("loggedInUser");
+    alert("Logged out!");
+    showSection('loginSection');
+}
+
+// Default view
+window.onload = () => {
+    const loggedIn = localStorage.getItem("loggedInUser");
+    if (loggedIn) {
+        showSection('dashboardSection');
+    } else {
+        showSection('loginSection');
+    }
+};
+</script>
+
+</body>
+</html>
