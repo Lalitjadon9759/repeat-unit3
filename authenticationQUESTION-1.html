@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>E-Commerce Admin Panel</title>
+</head>
+<body>
+
+  <div id="register-section" style="display: none;">
+    <h2>Register</h2>
+    <input type="email" id="reg-email" placeholder="Email" /><br>
+    <input type="password" id="reg-password" placeholder="Password" /><br>
+    <select id="reg-role">
+      <option value="admin">Admin</option>
+      <option value="user">User</option>
+    </select><br>
+    <button onclick="register()">Register</button>
+    <p>Already have an account? <a href="#" onclick="showSection('login')">Login Here</a></p>
+  </div>
+
+  <div id="login-section" style="display: none;">
+    <h2>Login</h2>
+    <input type="email" id="login-email" placeholder="Email" /><br>
+    <input type="password" id="login-password" placeholder="Password" /><br>
+    <button onclick="login()">Login</button>
+    <p>No account? <a href="#" onclick="showSection('register')">Register Here</a></p>
+  </div>
+
+  <div id="admin-section" style="display: none;">
+    <h2>Admin Dashboard</h2>
+    <button onclick="logout()">Logout</button>
+    <h3>Add Product</h3>
+    <input type="text" id="prod-title" placeholder="Product Title" /><br>
+    <input type="number" id="prod-price" placeholder="Price" /><br>
+    <input type="text" id="prod-image" placeholder="Image URL" /><br>
+    <button onclick="addProduct()">Add Product</button>
+    <h3>Product List</h3>
+    <ul id="admin-product-list"></ul>
+  </div>
+
+  <div id="user-section" style="display: none;">
+    <h2>User Dashboard</h2>
+    <button onclick="logout()">Logout</button>
+    <h3>Product List</h3>
+    <ul id="user-product-list"></ul>
+  </div>
+
+  
+ 
+
+  <script>
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DB_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    window.onload = function() {
+      const role = localStorage.getItem('role');
+      if (role === 'admin') {
+        showSection('admin');
+        fetchAdminProducts();
+      } else if (role === 'user') {
+        showSection('user');
+        fetchUserProducts();
+      } else {
+        showSection('login');
+      }
+    };
+
+    function showSection(section) {
+      document.getElementById('register-section').style.display = 'none';
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('admin-section').style.display = 'none';
+      document.getElementById('user-section').style.display = 'none';
+
+      if (section === 'register') document.getElementById('register-section').style.display = 'block';
+      if (section === 'login') document.getElementById('login-section').style.display = 'block';
+      if (section === 'admin') document.getElementById('admin-section').style.display = 'block';
+      if (section === 'user') document.getElementById('user-section').style.display = 'block';
+    }
+
+    function register() {
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      const role = document.getElementById('reg-role').value;
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(cred => {
+          return db.ref('users/' + cred.user.uid).set({ email, role });
+        })
+        .then(() => {
+          alert("Registration Successful! Please log in.");
+          showSection('login');
+        })
+        .catch(err => alert(err.message));
+    }
+
+    function login() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(cred => {
+          return db.ref('users/' + cred.user.uid).once('value');
+        })
+        .then(snapshot => {
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            localStorage.setItem('role', userData.role);
+            localStorage.setItem('uid', auth.currentUser.uid);
+
+            if (userData.role === 'admin') {
+              showSection('admin');
+              fetchAdminProducts();
+            } else {
+              showSection('user');
+              fetchUserProducts();
+            }
+          } else {
+            alert("User role not found.");
+          }
+        })
+        .catch(() => alert("Incorrect email or password!"));
+    }
+
+    function logout() {
+      auth.signOut().then(() => {
+        localStorage.clear();
+        showSection('login');
+      });
+    }
+
+    
+    function addProduct() {
+      const title = document.getElementById('prod-title').value;
+      const price = parseFloat(document.getElementById('prod-price').value);
+      const image = document.getElementById('prod-image').value;
+
+      const productId = db.ref().child('products').push().key;
+      db.ref('products/' + productId).set({ title, price, image })
+        .then(fetchAdminProducts)
+        .catch(err => alert(err.message));
+    }
+
+    function fetchAdminProducts() {
+      db.ref('products').once('value', snapshot => {
+        const list = document.getElementById('admin-product-list');
+        list.innerHTML = '';
+        snapshot.forEach(child => {
+          const product = child.val();
+          list.innerHTML += `
+            <li>
+              <img src="${product.image}" width="50">
+              <strong>${product.title}</strong> - $${product.price}
+              <button onclick="editProduct('${child.key}')">Edit</button>
+              <button onclick="deleteProduct('${child.key}')">Delete</button>
+            </li>
+          `;
+        });
+      });
+    }
+
+    function editProduct(id) {
+      const newTitle = prompt("New Title:");
+      const newPrice = parseFloat(prompt("New Price:"));
+      const newImage = prompt("New Image URL:");
+
+      db.ref('products/' + id).update({ title: newTitle, price: newPrice, image: newImage })
+        .then(fetchAdminProducts)
+        .catch(err => alert(err.message));
+    }
+
+    function deleteProduct(id) {
+      db.ref('products/' + id).remove()
+        .then(fetchAdminProducts)
+        .catch(err => alert(err.message));
+    }
+
+    // User Product View
+    function fetchUserProducts() {
+      db.ref('products').once('value', snapshot => {
+        const list = document.getElementById('user-product-list');
+        list.innerHTML = '';
+        snapshot.forEach(child => {
+          const product = child.val();
+          list.innerHTML += `
+            <li>
+              <img src="${product.image}" width="50">
+              <strong>${product.title}</strong> - $${product.price}
+            </li>
+          `;
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>

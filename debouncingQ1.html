@@ -14,13 +14,12 @@
 
 <h2>Firebase Auth & Dashboard</h2>
 
-<!-- Navigation -->
 <button onclick="showSection('registerSection')">Register</button>
 <button onclick="showSection('loginSection')">Login</button>
 <button onclick="showSection('dashboardSection')">Dashboard</button>
 <hr>
 
-<!-- Register Section -->
+
 <div id="registerSection" class="section">
     <h3>Register</h3>
     <input type="text" id="regName" placeholder="Name"><br><br>
@@ -29,7 +28,7 @@
     <button onclick="register()">Register</button>
 </div>
 
-<!-- Login Section -->
+
 <div id="loginSection" class="section">
     <h3>Login</h3>
     <input type="email" id="loginEmail" placeholder="Email"><br><br>
@@ -37,19 +36,18 @@
     <button onclick="login()">Login</button>
 </div>
 
-<!-- Dashboard Section -->
+
 <div id="dashboardSection" class="section">
     <h3>Dashboard</h3>
     <button onclick="logout()">Logout</button>
     <div id="products"></div>
 </div>
 
-<!-- Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-// Your Firebase Config (replace with your actual config)
+
 const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -63,7 +61,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// Show specific section
 function showSection(sectionId) {
     document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
     document.getElementById(sectionId).style.display = 'block';
@@ -79,7 +76,6 @@ function showSection(sectionId) {
     }
 }
 
-// Register function
 function register() {
     const name = document.getElementById("regName").value.trim();
     const email = document.getElementById("regEmail").value.trim();
@@ -102,7 +98,7 @@ function register() {
     }).catch(error => alert("Error: " + error.message));
 }
 
-// Login function
+
 function login() {
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value.trim();
@@ -125,7 +121,7 @@ function login() {
     });
 }
 
-// Load products from FakeStore API
+
 function loadProducts() {
     const productsDiv = document.getElementById("products");
     productsDiv.innerHTML = "Loading products...";
@@ -147,14 +143,12 @@ function loadProducts() {
         .catch(() => productsDiv.innerHTML = "Failed to load products.");
 }
 
-// Logout
 function logout() {
     localStorage.removeItem("loggedInUser");
     alert("Logged out!");
     showSection('loginSection');
 }
 
-// Default view
 window.onload = () => {
     const loggedIn = localStorage.getItem("loggedInUser");
     if (loggedIn) {
