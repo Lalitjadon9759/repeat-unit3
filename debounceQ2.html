@@ -29,13 +29,13 @@
 <div id="results"></div>
 
 <script>
-  const API_KEY = ' http://www.omdbapi.com/?i=tt3896198&apikey'; // Replace with your OMDB API key
+  const API_KEY = ' http://www.omdbapi.com/?i=tt3896198&apikey'; 
   const searchInput = document.getElementById('search');
   const resultsDiv = document.getElementById('results');
   let debounceTimer;
 
   searchInput.addEventListener('input', () => {
-    clearTimeout(debounceTimer); // Cancel previous timer
+    clearTimeout(debounceTimer); 
 
     debounceTimer = setTimeout(() => {
       const query = searchInput.value.trim();
