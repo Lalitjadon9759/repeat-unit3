@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Movie Search with Debouncing</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #search {
+      width: 300px;
+      padding: 8px;
+      font-size: 16px;
+    }
+    #results {
+      margin-top: 20px;
+    }
+    .movie-title {
+      padding: 5px 0;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Movie Search (Debouncing)</h2>
+<input type="text" id="search" placeholder="Type movie name..." />
+<div id="results"></div>
+
+<script>
+  const API_KEY = ' http://www.omdbapi.com/?i=tt3896198&apikey'; // Replace with your OMDB API key
+  const searchInput = document.getElementById('search');
+  const resultsDiv = document.getElementById('results');
+  let debounceTimer;
+
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer); // Cancel previous timer
+
+    debounceTimer = setTimeout(() => {
+      const query = searchInput.value.trim();
+      if (query !== '') {
+        fetchMovies(query);
+      } else {
+        resultsDiv.innerHTML = '';
+      }
+    }, 500);
+  });
+
+  function fetchMovies(query) {
+    fetch(` http://www.omdbapi.com/?i=tt3896198&apikey=4a8a5c1a${encodeURIComponent(query)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.Response === 'True') {
+          displayMovies(data.Search);
+        } else {
+          resultsDiv.innerHTML = `<p>No results found.</p>`;
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching movies:', err);
+        resultsDiv.innerHTML = `<p>Error fetching data.</p>`;
+      });
+  }
+
+  function displayMovies(movies) {
+    resultsDiv.innerHTML = '';
+    movies.forEach(movie => {
+      const div = document.createElement('div');
+      div.className = 'movie-title';
+      div.textContent = movie.Title;
+      resultsDiv.appendChild(div);
+    });
+  }
+</script>
+
+</body>
+</html>
